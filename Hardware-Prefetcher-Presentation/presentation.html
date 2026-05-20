@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware Prefetcher Lab — Final Project</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+
+  .slide {
+    width: 100vw; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 60px 80px;
+    page-break-after: always;
+    position: relative;
+    border-bottom: 2px solid #1e293b;
+  }
+
+  /* ── Slide 1: Title ── */
+  .slide-1 { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); }
+  .slide-1 .badge {
+    background: #3b82f6; color: #fff; padding: 6px 18px;
+    border-radius: 20px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .slide-1 h1 { font-size: 52px; font-weight: 800; text-align: center; line-height: 1.15;
+    background: linear-gradient(90deg,#60a5fa,#a78bfa,#34d399); -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent; margin-bottom: 16px; }
+  .slide-1 .subtitle { font-size: 22px; color: #94a3b8; text-align: center; margin-bottom: 40px; }
+  .slide-1 .meta { display: flex; gap: 40px; margin-top: 20px; }
+  .slide-1 .meta-item { text-align: center; }
+  .slide-1 .meta-item .val { font-size: 28px; font-weight: 700; color: #60a5fa; }
+  .slide-1 .meta-item .lbl { font-size: 12px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Slide 2: Overview ── */
+  .slide-2 { background: #0f172a; }
+  .slide-3 { background: #0f172a; }
+  .slide-4 { background: #0f172a; }
+  .slide-5 { background: #0f172a; }
+  .slide-6 { background: #0f172a; }
+  .slide-7 { background: #0f172a; }
+  .slide-8 { background: #0f172a; }
+
+  h2 { font-size: 36px; font-weight: 700; margin-bottom: 36px; text-align: center;
+    color: #f1f5f9; }
+  h2 span { color: #60a5fa; }
+
+  .section-label {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: #3b82f6; margin-bottom: 12px; font-weight: 600;
+  }
+
+  /* Cards grid */
+  .cards { display: grid; gap: 20px; width: 100%; }
+  .cards-2 { grid-template-columns: 1fr 1fr; }
+  .cards-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cards-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+    padding: 24px; position: relative;
+  }
+  .card.accent-blue  { border-top: 3px solid #3b82f6; }
+  .card.accent-green { border-top: 3px solid #10b981; }
+  .card.accent-orange{ border-top: 3px solid #f59e0b; }
+  .card.accent-purple{ border-top: 3px solid #8b5cf6; }
+  .card.accent-red   { border-top: 3px solid #ef4444; }
+
+  .card .icon { font-size: 30px; margin-bottom: 12px; }
+  .card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #f1f5f9; }
+  .card p, .card li { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+  .card ul { padding-left: 16px; }
+  .card .tag {
+    display: inline-block; background: #0f172a; border: 1px solid #475569;
+    border-radius: 6px; padding: 2px 10px; font-size: 11px; color: #94a3b8;
+    margin-top: 8px;
+  }
+  .card .tag.blue { border-color: #3b82f6; color: #60a5fa; }
+  .card .tag.green { border-color: #10b981; color: #34d399; }
+  .card .tag.orange { border-color: #f59e0b; color: #fbbf24; }
+  .card .tag.purple { border-color: #8b5cf6; color: #a78bfa; }
+
+  /* Architecture diagram */
+  .arch {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; width: 100%; margin-top: 10px;
+  }
+  .arch-box {
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+    padding: 18px 24px; text-align: center; min-width: 130px;
+  }
+  .arch-box .ico { font-size: 24px; margin-bottom: 6px; }
+  .arch-box .lbl { font-size: 13px; font-weight: 600; color: #f1f5f9; }
+  .arch-box .sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .arch-arrow { font-size: 28px; color: #3b82f6; margin: 0 8px; }
+
+  /* Metric badges */
+  .metrics-row { display: flex; gap: 16px; justify-content: center; width: 100%; }
+  .metric-box {
+    background: #1e293b; border-radius: 12px; padding: 20px 30px;
+    text-align: center; border: 1px solid #334155; flex: 1;
+  }
+  .metric-box .val { font-size: 36px; font-weight: 800; }
+  .metric-box .lbl { font-size: 12px; color: #64748b; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .metric-box.blue .val { color: #60a5fa; }
+  .metric-box.green .val { color: #34d399; }
+  .metric-box.orange .val { color: #fbbf24; }
+  .metric-box.purple .val { color: #a78bfa; }
+
+  /* Plot */
+  .plot { border-radius: 12px; max-width: 100%; border: 1px solid #334155; }
+  .plot-caption { font-size: 13px; color: #64748b; margin-top: 10px; text-align: center; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #1e3a5f; color: #60a5fa; font-size: 13px; padding: 12px 16px;
+    text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+  td { padding: 12px 16px; border-bottom: 1px solid #1e293b; font-size: 14px; color: #cbd5e1; }
+  tr:hover td { background: #1e293b; }
+  td.good { color: #34d399; font-weight: 700; }
+  td.mid  { color: #fbbf24; font-weight: 600; }
+  td.bad  { color: #f87171; }
+
+  /* Finding bullets */
+  .findings { list-style: none; width: 100%; max-width: 900px; }
+  .findings li {
+    background: #1e293b; border-left: 4px solid #3b82f6;
+    border-radius: 0 8px 8px 0; padding: 14px 20px; margin-bottom: 12px;
+    font-size: 16px; color: #cbd5e1; line-height: 1.5;
+  }
+  .findings li .emoji { margin-right: 10px; }
+
+  /* Slide number */
+  .slide-num {
+    position: absolute; bottom: 20px; right: 30px;
+    font-size: 12px; color: #334155; font-weight: 600;
+  }
+
+  /* AI usage */
+  .ai-bar {
+    background: linear-gradient(90deg, #1e293b, #1e3a5f);
+    border: 1px solid #3b82f6; border-radius: 12px;
+    padding: 20px 28px; width: 100%; max-width: 800px; margin-bottom: 24px;
+  }
+  .ai-bar h3 { color: #60a5fa; font-size: 16px; margin-bottom: 8px; }
+  .ai-bar p { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+  .prompt-box {
+    background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+    padding: 14px 18px; font-family: monospace; font-size: 13px; color: #a78bfa;
+    width: 100%; max-width: 800px; margin-bottom: 10px;
+  }
+  .prompt-box .user { color: #60a5fa; }
+  .prompt-box .ai   { color: #34d399; }
+
+  /* Team slide */
+  .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%; }
+  .team-card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+    padding: 22px; text-align: center;
+  }
+  .team-card .avatar {
+    width: 54px; height: 54px; border-radius: 50%; background: #1e3a5f;
+    border: 2px solid #3b82f6; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin: 0 auto 12px;
+  }
+  .team-card h4 { font-size: 15px; color: #f1f5f9; margin-bottom: 4px; }
+  .team-card p  { font-size: 12px; color: #64748b; margin-bottom: 8px; }
+  .team-card .role { font-size: 11px; color: #60a5fa; background: #1e3a5f;
+    border-radius: 20px; padding: 3px 12px; display: inline-block; }
+
+  @page {
+    size: 297mm 167mm landscape;
+    margin: 0;
+  }
+  @media print {
+    html, body { width: 297mm; height: 167mm; }
+    .slide {
+      page-break-after: always;
+      width: 297mm;
+      min-height: 167mm;
+      height: 167mm;
+      padding: 28px 48px;
+      font-size: 85%;
+      overflow: hidden;
+    }
+    .slide-1 h1 { font-size: 38px; }
+    .slide-1 .subtitle { font-size: 16px; }
+    h2 { font-size: 26px; margin-bottom: 20px; }
+    .card { padding: 14px; }
+    .card h3 { font-size: 14px; }
+    .card p, .card li { font-size: 12px; }
+    .metric-box .val { font-size: 26px; }
+    .findings li { font-size: 13px; padding: 10px 16px; margin-bottom: 8px; }
+    .plot { max-height: 90px; }
+    .prompt-box { font-size: 11px; padding: 10px 14px; }
+    .ai-bar { padding: 14px 20px; }
+    .ai-bar h3 { font-size: 13px; }
+    .ai-bar p { font-size: 12px; }
+    .arch-box { padding: 12px 16px; min-width: 100px; }
+    .arch-box .lbl { font-size: 11px; }
+    table td, table th { padding: 8px 12px; font-size: 12px; }
+    .team-card h4 { font-size: 13px; }
+    .team-card p { font-size: 11px; }
+    .section-label { font-size: 10px; margin-bottom: 8px; }
+  }
+
+  /* Slide number */
+  .slide::after {
+    content: attr(data-num) " / 8";
+    position: absolute; bottom: 20px; right: 30px;
+    font-size: 12px; color: #334155; font-weight: 600;
+  }
+
+  /* Two-col layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+══════════════════════════════════════════════════ -->
+<section class="slide slide-1" data-num="1">
+  <div class="badge">Computer Architecture &amp; OS · Final Project</div>
+  <h1>Hardware Prefetcher Lab</h1>
+  <p class="subtitle">Simulation, comparison, and analysis of cache prefetching strategies</p>
+  <div class="meta">
+    <div class="meta-item"><div class="val">4</div><div class="lbl">Prefetchers</div></div>
+    <div class="meta-item"><div class="val">5</div><div class="lbl">Trace Types</div></div>
+    <div class="meta-item"><div class="val">5</div><div class="lbl">Experiments</div></div>
+    <div class="meta-item"><div class="val">32 KB</div><div class="lbl">Cache Baseline</div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 2 — WHAT WE BUILT
+══════════════════════════════════════════════════ -->
+<section class="slide slide-2" data-num="2">
+  <div class="section-label">Project Overview</div>
+  <h2>What We <span>Built</span></h2>
+  <div class="arch">
+    <div class="arch-box" style="border-top:3px solid #8b5cf6">
+      <div class="ico">📂</div>
+      <div class="lbl">Trace Generator</div>
+      <div class="sub">5 access patterns</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-top:3px solid #3b82f6">
+      <div class="ico">⚙️</div>
+      <div class="lbl">Prefetcher Harness</div>
+      <div class="sub">LRU cache sim</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-top:3px solid #10b981">
+      <div class="ico">🧠</div>
+      <div class="lbl">Prefetcher</div>
+      <div class="sub">4 algorithms</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box" style="border-top:3px solid #f59e0b">
+      <div class="ico">📊</div>
+      <div class="lbl">Stats &amp; Plots</div>
+      <div class="sub">5 experiments</div>
+    </div>
+  </div>
+
+  <div style="height:28px"></div>
+
+  <div class="cards cards-3" style="max-width:900px">
+    <div class="card accent-purple">
+      <h3>Trace Types</h3>
+      <ul>
+        <li>Sequential</li>
+        <li>Strided (128 B step)</li>
+        <li>Mixed / Multi-stream</li>
+        <li>Random</li>
+        <li>Looping</li>
+      </ul>
+    </div>
+    <div class="card accent-blue">
+      <h3>Cache Simulation</h3>
+      <ul>
+        <li>Set-associative LRU</li>
+        <li>64-byte block size</li>
+        <li>Configurable size (8–128 KB)</li>
+        <li>Prefetch degree 1–8</li>
+      </ul>
+    </div>
+    <div class="card accent-green">
+      <h3>Metrics Tracked</h3>
+      <ul>
+        <li>Cache Hit Rate</li>
+        <li>Prefetch Accuracy</li>
+        <li>Prefetch Coverage</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 3 — 4 PREFETCHERS
+══════════════════════════════════════════════════ -->
+<section class="slide slide-3" data-num="3">
+  <div class="section-label">Algorithms</div>
+  <h2>The 4 <span>Prefetchers</span></h2>
+  <div class="cards cards-4">
+    <div class="card accent-red">
+      <div class="icon">🚫</div>
+      <h3>No Prefetcher</h3>
+      <p>Baseline. Zero prefetching. Every access is a potential cache miss.</p>
+      <span class="tag">Baseline</span>
+    </div>
+    <div class="card accent-blue">
+      <div class="icon">➡️</div>
+      <h3>Next-Line</h3>
+      <p>After each access fetches the immediately next cache line (addr + 64).</p>
+      <p style="margin-top:8px;font-size:12px;color:#475569">Best for sequential streams. Fails on strides &gt; 64 B.</p>
+      <span class="tag blue">Simple · Low cost</span>
+    </div>
+    <div class="card accent-orange">
+      <div class="icon">📏</div>
+      <h3>Stride</h3>
+      <p>Tracks per-PC access history. Detects repeated stride, prefetches <em>N</em> lines ahead.</p>
+      <p style="margin-top:8px;font-size:12px;color:#475569">Confirm threshold = 2. Works for any regular stride pattern.</p>
+      <span class="tag orange">PC-indexed · degree=4</span>
+    </div>
+    <div class="card accent-green">
+      <div class="icon">🌊</div>
+      <h3>GHB / Stream</h3>
+      <p>Global History Buffer — delta correlation indexed by PC. Handles multiple concurrent memory streams.</p>
+      <p style="margin-top:8px;font-size:12px;color:#475569">Lookback=3, history=256 entries.</p>
+      <span class="tag green">Multi-stream · Advanced</span>
+    </div>
+  </div>
+
+  <div style="height:24px"></div>
+  <div class="metrics-row" style="max-width:900px">
+    <div class="metric-box blue"><div class="val">100%</div><div class="lbl">Next-Line hit rate on Sequential</div></div>
+    <div class="metric-box orange"><div class="val">99.9%</div><div class="lbl">Stride hit rate on Looping</div></div>
+    <div class="metric-box green"><div class="val">75%</div><div class="lbl">GHB coverage on Looping</div></div>
+    <div class="metric-box purple"><div class="val">≈0%</div><div class="lbl">All prefetchers on Random</div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 4 — EXP 1: Hit Rate by Trace
+══════════════════════════════════════════════════ -->
+<section class="slide slide-4" data-num="4">
+  <div class="section-label">Experiment 1</div>
+  <h2>Cache Hit Rate <span>by Trace Type</span></h2>
+  <div class="two-col" style="align-items:center">
+    <div>
+      <img class="plot" src="plots/exp1_hit_rate_by_trace.png" alt="Exp1">
+    </div>
+    <div>
+      <ul class="findings" style="margin:0">
+        <li><span class="emoji">🔵</span><strong>Sequential</strong> — Next-Line wins at 100%. Stride/GHB at 50% (every 2nd line is a "next" line, so they overshoot).</li>
+        <li><span class="emoji">🟠</span><strong>Strided-128</strong> — Next-Line collapses (stride 128 ≠ 64 B). Stride &amp; GHB hold at ~49%.</li>
+        <li><span class="emoji">🟢</span><strong>Mixed</strong> — Stride &amp; GHB lead at 57%. Next-Line manages 27%.</li>
+        <li><span class="emoji">❌</span><strong>Random</strong> — Everyone fails (~3%). Unpredictable addresses are unbeatable.</li>
+        <li><span class="emoji">✅</span><strong>Looping</strong> — All prefetchers ~100%: tiny working set fits in 32 KB cache.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 5 — EXP 2 + 3
+══════════════════════════════════════════════════ -->
+<section class="slide slide-5" data-num="5">
+  <div class="section-label">Experiments 2 &amp; 3</div>
+  <h2>Metrics vs Cache Size &amp; <span>Accuracy/Coverage</span></h2>
+  <div class="two-col">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <img class="plot" src="plots/exp2_metrics_vs_cache_size.png" alt="Exp2">
+      <p class="plot-caption">Next-Line dominates on Mixed trace at all cache sizes (82% hit rate, ~82% accuracy). Stride accuracy jumps to 50% only at 64 KB+ — needs large cache to "stage" early prefetches.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <img class="plot" src="plots/exp3_accuracy_vs_coverage.png" alt="Exp3">
+      <p class="plot-caption">Top-right = ideal zone. Next-Line on Sequential (100%/100%) is closest to ideal. All prefetchers collapse on Random (bottom-left). Stride &amp; GHB cluster at ~20% accuracy / ~50% coverage for predictable traces.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 6 — EXP 4: Heatmap
+══════════════════════════════════════════════════ -->
+<section class="slide slide-6" data-num="6">
+  <div class="section-label">Experiment 4</div>
+  <h2>Full Performance <span>Heatmap</span></h2>
+  <img class="plot" style="max-width:95%" src="plots/exp4_heatmap.png" alt="Exp4">
+  <div style="height:16px"></div>
+  <table style="max-width:900px">
+    <tr>
+      <th>Prefetcher</th><th>Sequential</th><th>Strided</th><th>Mixed</th><th>Random</th><th>Looping</th>
+    </tr>
+    <tr>
+      <td>No Prefetcher</td><td class="bad">0.0%</td><td class="bad">0.0%</td><td class="bad">10.8%</td><td class="bad">3.4%</td><td class="good">99.2%</td>
+    </tr>
+    <tr>
+      <td>Next-Line</td><td class="good">100%</td><td class="bad">0.0%</td><td class="mid">27.1%</td><td class="bad">3.5%</td><td class="good">100%</td>
+    </tr>
+    <tr>
+      <td>Stride</td><td class="mid">49.8%</td><td class="mid">49.2%</td><td class="good">57.1%</td><td class="bad">3.4%</td><td class="good">99.9%</td>
+    </tr>
+    <tr>
+      <td>GHB / Stream</td><td class="mid">49.7%</td><td class="mid">49.1%</td><td class="good">57.0%</td><td class="bad">3.4%</td><td class="good">99.8%</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 7 — EXP 5 + KEY FINDINGS
+══════════════════════════════════════════════════ -->
+<section class="slide slide-7" data-num="7">
+  <div class="section-label">Experiment 5 · Conclusions</div>
+  <h2>Degree Sensitivity &amp; <span>Key Findings</span></h2>
+  <div class="two-col" style="align-items:flex-start">
+    <div>
+      <img class="plot" src="plots/exp5_degree_sensitivity.png" alt="Exp5">
+      <p class="plot-caption">Degree=1 gives best accuracy (100%), but hit rate drops 50% at degree≥2 because the cache evicts pre-fetched lines before they're used on the Mixed trace.</p>
+    </div>
+    <div>
+      <ul class="findings">
+        <li><span class="emoji">🏆</span>No single prefetcher wins everywhere — access pattern matters most.</li>
+        <li><span class="emoji">🔵</span>Next-Line is optimal for sequential workloads; useless for stride-128.</li>
+        <li><span class="emoji">⚖️</span>Stride &amp; GHB are more general: consistent 49–57% hit rate on structured traces.</li>
+        <li><span class="emoji">📐</span>Prefetch degree=1 maximises accuracy; higher degree increases coverage but pollutes cache.</li>
+        <li><span class="emoji">🎲</span>Random access (~3%) is unpredict­able for all hardware prefetchers — need software hints.</li>
+        <li><span class="emoji">🔁</span>Looping workloads saturate the cache naturally; prefetching adds little extra benefit.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SLIDE 8 — AI USAGE + TEAM
+══════════════════════════════════════════════════ -->
+<section class="slide slide-8" data-num="8">
+  <div class="section-label">Team &amp; AI Usage</div>
+  <h2>How We <span>Built It</span></h2>
+
+  <div class="ai-bar">
+    <h3>🤖 AI Tool: Claude Code (claude-sonnet-4-6)</h3>
+    <p>Used for architecture design, prefetcher implementation, experiment scripting, visualization, and presentation assembly. All output reviewed and understood by the team before submission.</p>
+    <p style="margin-top:8px;font-size:13px">
+      📄 Full AI usage log: <a href="https://docs.google.com/document/d/15GW4WTfhW6HVOgD34yz9PBtxDUfXC7KwvZ-yi7Ly86A/edit?usp=sharing" style="color:#60a5fa" target="_blank">AI_USAGE.md — Google Doc</a>
+    </p>
+  </div>
+
+  <div class="two-col" style="max-width:1000px; gap: 16px">
+    <div>
+      <p style="font-size:12px;color:#60a5fa;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">My Prompts (Person 5 — Presenter)</p>
+      <div class="prompt-box">
+        <span class="user">Me:</span> "Analyze the 5 plots in this folder and the project code, then build a full 8-slide HTML presentation with dark theme, all graphs embedded, and key findings per experiment"<br>
+        <span class="ai">Claude:</span> → Created presentation.html with all 5 charts, analysis, team slide
+      </div>
+      <div class="prompt-box">
+        <span class="user">Me:</span> "Write a README.md: how to install deps, how to run python main.py, what each file does, mention Claude Code was used"<br>
+        <span class="ai">Claude:</span> → README with install / run / file structure sections
+      </div>
+      <div class="prompt-box">
+        <span class="user">Me:</span> "Write AI_USAGE.md for Person 5: slides, README, demo coordination — list the exact prompts I used"<br>
+        <span class="ai">Claude:</span> → AI_USAGE section with prompts and outcomes
+      </div>
+    </div>
+    <div>
+      <p style="font-size:12px;color:#60a5fa;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Team Contributions</p>
+      <div class="team-grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="team-card">
+          <div class="avatar">🧱</div>
+          <h4>Dolgiyev Magomed</h4>
+          <p>Trace format, loader, harness</p>
+          <div class="role">Trace Infrastructure</div>
+        </div>
+        <div class="team-card">
+          <div class="avatar">➡️</div>
+          <h4>Tynyshtyk Sultan</h4>
+          <p>Next-Line &amp; Stride prefetchers</p>
+          <div class="role">Basic Prefetchers</div>
+        </div>
+        <div class="team-card">
+          <div class="avatar">📊</div>
+          <h4>Tsai Svetlana</h4>
+          <p>Metrics, experiments, plots</p>
+          <div class="role">Metrics &amp; Analysis</div>
+        </div>
+        <div class="team-card">
+          <div class="avatar">🌊</div>
+          <h4>Kaliyas Askhat</h4>
+          <p>GHB / Stream prefetcher</p>
+          <div class="role">Advanced Prefetcher</div>
+        </div>
+        <div class="team-card" style="border-color:#3b82f6; border-width:2px">
+          <div class="avatar" style="border-color:#a78bfa">🎤</div>
+          <h4>Kozhakhmet Medetbek</h4>
+          <p>Slides, README, AI_USAGE.md, demo</p>
+          <div class="role" style="background:#2d1b69;color:#a78bfa">PM &amp; Presenter</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
